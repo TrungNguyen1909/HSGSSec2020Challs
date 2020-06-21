@@ -78,7 +78,7 @@ gets:
 	sub rsi, rcx
 	mov rax, rsi
 	ret
-RTFS:
+GMTFS:
 	push rbp
 	mov rbp, rsp
 	xor rdi, rdi
