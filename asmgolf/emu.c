@@ -21,7 +21,7 @@ register_state_t start_emulation(unsigned char* asmbuf,size_t size, register_sta
 	err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
 	if(err!=UC_ERR_OK){
 		fprintf(stderr, "Failed uc_open(): %d, %s\n", err,uc_strerror(err));
-		abort();
+		exit(3);
 	}
 	//Alignment
 	size_t executable_size = size;
@@ -49,6 +49,7 @@ register_state_t start_emulation(unsigned char* asmbuf,size_t size, register_sta
 	err = uc_emu_start(uc, ADDRESS, ADDRESS + size - 1, 500000, 0);//0.5 seconds timeout
 	if (err!=UC_ERR_OK) {
 		fprintf(stderr,"Failed on uc_emu_start() with error returned %u: %s\n",	err, uc_strerror(err));
+		exit(4);
 	}
 	register_state_t result = calloc(1, sizeof(struct register_state));
 	for(int i=0;i<regs_nums;i++){
@@ -57,16 +58,17 @@ register_state_t start_emulation(unsigned char* asmbuf,size_t size, register_sta
 	uc_reg_read_batch(uc, regs, ptr, regs_nums);
 	// now print out some registers
 	fprintf(stderr, ">>> Emulation done.\n");
+	for(int i=0;i<regs_nums;i++)
+	printf("%s = 0x%lx\n", reg_names[i], result->regs[i]);
 	uc_close(uc);
 	return result;
 }
-register_state_t parse_init_regs_from_file(const char* path){
-	FILE* fd = fopen(path, "r");
+register_state_t parse_init_regs(){
 	char reg[8];
 	int64_t reg_value = 0;
 	memset(reg,0,sizeof(reg));
 	register_state_t result = calloc(1, sizeof(struct register_state));
-	while(fscanf(fd,"%s = %x\n",reg,&reg_value)==2){
+	while(scanf("%4s = %lx\n",reg,&reg_value)==2){
 		for(int i=0;i<sizeof(reg_names)/sizeof(long);i++)
 		if(strncasecmp(reg, reg_names[i], strlen(reg))==0){
 			result->regs[i] = reg_value;
@@ -75,7 +77,6 @@ register_state_t parse_init_regs_from_file(const char* path){
 		memset(reg,0,sizeof(reg));
 		reg_value = 0;
 	}
-	fclose(fd);
 	return result;
 }
 double score_registers_from_file(register_state_t state, const char* path){
@@ -86,7 +87,7 @@ double score_registers_from_file(register_state_t state, const char* path){
 	long count = 0;
 	long correct = 0;
 	register_state_t result = calloc(1, sizeof(struct register_state));
-	while(fscanf(fd,"%4s = %x\n",reg,&reg_value)==2){
+	while(fscanf(fd,"%4s = %lx\n",reg,&reg_value)==2){
 		for(int i=0;i<sizeof(reg_names)/sizeof(long);i++)
 		if(strncasecmp(reg, reg_names[i], strlen(reg))==0){
 			correct += (reg_value == state->regs[i]?1:0);
@@ -107,10 +108,6 @@ int main(int argc, char *argv[]) {
 	unsigned char *asmbuf;
 	size_t size;
 	
-	if(argc<3){
-		fprintf(stderr, "%s input expected_output",argv[0]);
-		abort();
-	}
 	char* inbuf = calloc(1, code_cc_len+1);
 	assert(inbuf!=0);
 	memcpy(inbuf, code_cc, code_cc_len);
@@ -118,16 +115,15 @@ int main(int argc, char *argv[]) {
 	err = ks_open(KS_ARCH_X86, KS_MODE_64, &ks);
 	if(err!=KS_ERR_OK){
 		fprintf(stderr, "Failed to open keystone engine");
-		abort();
+		exit(1);
 	}
 	if(ks_asm(ks, inbuf, ADDRESS, &asmbuf, &size, &count)!=KS_ERR_OK){
 		fprintf(stderr, "ERROR: ks_asm() failed & count = %lu, error = %u\n", count, ks_errno(ks));
-		abort();
+		exit(2);
 	}
 	fprintf(stderr, "Compiled: %lu bytes, statements: %lu\n", size, count);
-	register_state_t init_regs = parse_init_regs_from_file(argv[1]);
+	register_state_t init_regs = parse_init_regs();
 	register_state_t result_regs = start_emulation(asmbuf,size,init_regs);
-	printf("%lf", score_registers_from_file(result_regs, argv[2]));
 	free(init_regs);
 	free(result_regs);
 	ks_free(asmbuf);
