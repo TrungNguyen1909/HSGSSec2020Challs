@@ -169,15 +169,18 @@ int main(int argc, char *argv[]) {
 	unsigned char *asmbuf;
 	size_t size;
 	if(argc<3){
-		fprintf(stderr, "%s code.s reg.init");
+		fprintf(stderr, "%s code.s reg.init\n", argv[0]);
 		abort();
 	}
 	int fd = open(argv[1],O_RDONLY);
-	struct stat* fs = calloc(1, sizeof(struct stat*));
+	struct stat* fs = calloc(1, sizeof(struct stat));
 	fstat(fd, fs);
-	char* inbuf = calloc(1, fs->st_size);
+	off_t fsize = fs->st_size;
+	char* inbuf = calloc(1, fsize+1);
 	assert(inbuf!=0);
-	read(fd, inbuf, fs->st_size);
+	lseek(0, 0, SEEK_SET);
+	read(fd, inbuf, fsize);
+	puts(inbuf);
 	close(fd);
 	fprintf(stderr, "Compiling...");
 	err = ks_open(KS_ARCH_X86, KS_MODE_64, &ks);
