@@ -1,0 +1,6 @@
+# OTP Door
+
+I've heard of a super secure OTP-protected door that seals a great secret. I don't have access to the OTP generator, and I've been trying inputting some numbers multiple times but I've failed to unlock it.
+
+I've heard of some witches discussing how ridiculous the secure system was. Some of them have even break into the door effortlessly with their witchcraft. I don't know witchcraft, but I was able to get a copy of the door's firmware. I heard that you have been practicing witchcraft recently, so maybe you could break into the door and find the secret?
+ 

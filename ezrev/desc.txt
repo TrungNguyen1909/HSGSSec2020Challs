@@ -1,0 +1,7 @@
+# EZREV
+
+Find the password to make the program return the CORRECT answer.
+
+The files we attached only contains the fake flag. DO NOT SUBMIT THIS FLAG.
+
+When you found the password, use `nc` or pwntools to interact with the challenge server, which will output the real flag to submit if you enter the correct password.

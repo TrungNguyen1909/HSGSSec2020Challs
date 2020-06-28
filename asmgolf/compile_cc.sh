@@ -1,4 +1,4 @@
 #!/bin/bash
 
 xxd -i code.cc > source.h
-cc -o code emu.c -lkeystone -lstdc++ -lm -lpthread -lunicorn
+cc -Ofast -o code emu.c -lkeystone -lstdc++ -lm -lpthread -lunicorn

@@ -4,6 +4,7 @@ SYS_WRITE equ 0x1
 section .text
 global _start
 _start:
+	entered_pin equ -0x10
 	push rbp
 	mov rbp, rsp
 	; Print welcome message
@@ -16,19 +17,38 @@ _start:
 	syscall
 	; read pin
 	xor rdi, rdi
-	lea rsi, [rel entered_pin]
-	mov rdx, 8
+	lea rsi, [rbp+entered_pin]
+	mov rdx, 16
 	mov rax, SYS_READ
 	syscall
+	; check printable
+	lea rsi, [rbp+entered_pin]
+	xor rax, rax
+.check_loop:
+	lodsb
+	cmp al, ' '
+	jle .fail
+	cmp al, '~'
+	jg .fail
+	cmp rsi, rbp
+	jl .check_loop
+
 	; verify
+	lea rsi, [rbp+entered_pin]
+	mov rcx, 8
+	xor rax, rax
+.verify_loop:
+	shl rax, 8
+	lodsb
+	xor al, byte [rsi+7]
+	loop .verify_loop	
+	
+	mov rbx, rax
 	lea rsi, [rel correct_pin]
 	lodsq
-	mov rbx, rax
-	lea rsi, [rel entered_pin]
-	lodsq
 	cmp rax, rbx
-	je success
-fail:
+	je .success
+.fail:
 	xor rdi, rdi
 	inc rdi
 	lea rsi, [rel incorrect_msg]
@@ -37,8 +57,8 @@ fail:
 	mov rax, SYS_WRITE
 	syscall
 	mov rdi, 1
-	jmp end
-success:
+	jmp .end
+.success:
 	xor rdi, rdi
 	inc rdi
 	lea rsi, [rel correct_msg]
@@ -47,7 +67,7 @@ success:
 	mov rax, SYS_WRITE
 	syscall
 	xor rdi, rdi
-end:
+.end:
 	mov rax, SYS_EXIT
 	syscall
 	hlt
@@ -55,19 +75,14 @@ end:
 	ret
 
 section .data
-global welcome_msg
-global correct_msg
-global correct_pin
 welcome_msg:
 db "PIN CODE:",0xa,0
 end_welcome_msg:
 correct_msg:
-db "CORRECT!",0xa,0
+db "CORRECT! The Flag is HSGSSec{XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}",0xa,0
 end_correct_msg:
 incorrect_msg:
 db "INCORRECT!",0xa,0
 end_incorrect_msg:
 correct_pin:
-dq 0xdeadbeef41424344
-entered_pin:
-dq 0
+dq 0x7c0558000056084a

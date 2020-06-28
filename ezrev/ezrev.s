@@ -60,7 +60,7 @@ welcome_msg:
 db "PIN CODE:",0xa,0
 end_welcome_msg:
 correct_msg:
-db "CORRECT!",0xa,0
+db "CORRECT! The flag is HSGSSec{FAKE_FLAG_DO_NOT_SUBMIT_USE_CHALL_SERVER_FOR_FLAG}",0xa,0
 end_correct_msg:
 incorrect_msg:
 db "INCORRECT!",0xa,0

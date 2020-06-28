@@ -12,10 +12,15 @@
 
 #define ADDRESS 0x1000000
 
+static void hook_syscall(uc_engine *uc, void *user_data) {
+	uint64_t rax;
+	uc_reg_read(uc, UC_X86_REG_RAX, &rax);
+
+}
 register_state_t start_emulation(unsigned char* asmbuf,size_t size, register_state_t init_regs){
 	uc_engine *uc;
 	uc_err err;
-	
+	uc_hook trace1;	
 	fprintf(stderr, "Starting emulation...\n");
 	
 	err = uc_open(UC_ARCH_X86, UC_MODE_64, &uc);
@@ -23,6 +28,7 @@ register_state_t start_emulation(unsigned char* asmbuf,size_t size, register_sta
 		fprintf(stderr, "Failed uc_open(): %d, %s\n", err,uc_strerror(err));
 		exit(3);
 	}
+	uc_hook_add(uc, &trace1, UC_HOOK_INSN, hook_syscall, NULL, 1, 0, UC_X86_INS_SYSCALL);
 	//Alignment
 	size_t executable_size = size;
 	executable_size &=((-1ULL)<<12);
